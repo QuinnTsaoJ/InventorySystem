@@ -1,0 +1,464 @@
+
+UE5 通用网格背包插件项目总结
+========================================
+
+项目定位
+----------------------------------------
+这是一个长期维护、可复用的 UE5 Runtime 网格背包插件。
+
+目标：
+- 通用背包框架
+- 多项目复用
+- C++核心 + Blueprint扩展
+- 提供基础UI
+- 不绑定具体游戏玩法
+- 支持未来有限联机扩展
+- 适合作为长期技术插件
+
+不负责：
+- 装备系统
+- 武器系统
+- 世界物品Actor
+- GAS
+- RPG属性系统
+- 生存系统逻辑
+
+插件模块结构
+----------------------------------------
+
+1. InventoryRuntime
+负责：
+- 数据结构
+- 背包逻辑
+- Grid算法
+- 堆叠
+- 重量
+- 自动整理
+- SaveGame
+- Delegate
+- 网络同步预留
+
+禁止依赖：
+- UMG
+- Slate
+
+2. InventoryUI
+负责：
+- Grid Widget
+- Item Widget
+- DragDrop
+- Tooltip
+- 快捷栏UI
+- 鼠标交互
+
+依赖：
+- UMG
+- Slate
+- SlateCore
+
+3. InventoryEditor（后期）
+负责：
+- 编辑器工具
+- DataTable辅助
+- 调试工具
+- Grid预览
+
+背包系统设计
+----------------------------------------
+
+背包类型：
+- 网格背包
+- 类似 Tarkov
+
+支持功能：
+- 物品占格
+- 90度旋转
+- 自动整理
+- 自动堆叠
+- 动态扩容
+- 快捷栏
+- 拖拽交互
+- Split Stack
+- 总重量限制
+
+不支持：
+- 非矩形物品
+- 子容器
+- 复杂Packing算法
+- 完整装备系统
+- 世界掉落系统
+
+物品架构
+========================================
+
+采用：
+Definition + Instance 架构
+
+1. Item Definition（静态定义）
+----------------------------------------
+
+来源：
+- DataTable
+
+结构：
+FInventoryItemDefinition
+
+负责：
+- 名字
+- 描述
+- 图标
+- Grid尺寸
+- 重量
+- 是否可旋转
+- 是否可堆叠
+- 最大堆叠
+- GameplayTag
+- RuntimeData类型
+
+说明：
+Definition描述：
+“这个物品是什么”
+
+2. Item Instance（运行时实例）
+----------------------------------------
+
+结构：
+FInventoryItemInstance
+
+负责：
+- ItemID
+- InstanceID
+- 数量
+- Position
+- Rotation
+- RuntimeData
+
+说明：
+Instance描述：
+“这个物品当前状态”
+
+采用：
+- Struct路线
+- 不使用 UObject
+
+原因：
+- SaveGame友好
+- 网络同步友好
+- 无GC
+- 性能稳定
+
+RuntimeData设计
+========================================
+
+采用：
+FInstancedStruct
+
+基础结构：
+FItemRuntimeData
+
+扩展结构示例：
+- FFoodRuntimeData
+- FLiquidRuntimeData
+
+支持：
+- 温度
+- 新鲜度
+- 液体容量
+- 耐久等
+
+规则：
+- 具有RuntimeData的物品不可堆叠
+- 无RuntimeData物品可堆叠
+
+Grid系统设计
+========================================
+
+核心原则：
+Inventory真正管理的是：
+- Item
+
+不是：
+- 格子
+
+Grid只是：
+- 空间映射结果
+
+Grid结构
+----------------------------------------
+
+真正数据：
+TArray<FInventoryItemInstance> Items
+
+缓存：
+TArray<int32> OccupancyMap
+
+Grid大小：
+FIntPoint GridSize
+
+OccupancyMap设计
+----------------------------------------
+
+采用：
+一维数组
+
+规则：
+-1 = 空
+0  = Items[0]
+1  = Items[1]
+
+优点：
+- Cache友好
+- 易序列化
+- 易同步
+- 性能稳定
+
+坐标规则
+----------------------------------------
+
+原点：
+左上角 (0,0)
+
+方向：
+X -> 右
+Y -> 下
+
+核心算法
+----------------------------------------
+
+1. CanPlaceItem
+负责：
+- 边界检测
+- 碰撞检测
+- 空间合法性
+
+2. FindAvailablePosition
+负责：
+- 搜索空位
+
+规则：
+- 从左到右
+- 从上到下
+
+3. AutoArrange
+负责：
+- 简单整理
+
+规则：
+- 大物品优先
+- 按面积排序
+- 重新布局
+
+4. RebuildOccupancyMap
+负责：
+- 重建Grid缓存
+
+说明：
+第一版不做增量更新。
+
+UI架构
+========================================
+
+核心原则：
+UI不是数据拥有者。
+
+真正数据：
+- InventoryComponent
+
+UI只负责：
+- 显示
+- 交互
+
+UI数据流
+----------------------------------------
+
+InventoryComponent
+    ↓
+Delegate
+    ↓
+InventoryGridWidget
+    ↓
+ItemWidget
+
+ItemWidget只保存：
+FGuid InstanceID
+
+不缓存：
+FInventoryItemInstance
+
+原因：
+避免数据不同步。
+
+交互设计
+----------------------------------------
+
+UI不直接修改数据。
+
+所有操作：
+必须调用：
+InventoryComponent API
+
+例如：
+- MoveItem
+- RotateItem
+- SplitStack
+- MergeStack
+
+拖拽逻辑
+----------------------------------------
+
+UI负责：
+- 鼠标位置
+- Grid坐标转换
+
+Runtime负责：
+- 空间检测
+- 合法性判断
+
+拖拽预览：
+实时调用：
+CanPlaceItem()
+
+API设计
+========================================
+
+核心原则：
+- API职责单一
+- Runtime为唯一数据入口
+- UI不能直接改数据
+
+查询类API
+----------------------------------------
+
+- GetItemDefinition
+- FindItem
+- GetItems
+- GetCurrentWeight
+- CanCarryWeight
+- IsCellOccupied
+- CanPlaceItem
+
+修改类API
+----------------------------------------
+
+- AddItem
+- RemoveItem
+- MoveItem
+- RotateItem
+- SplitStack
+- MergeStack
+- AutoArrange
+- ResizeInventory
+
+快捷栏API
+----------------------------------------
+
+- SetQuickSlot
+- ClearQuickSlot
+- UseQuickSlot
+
+UseItem设计
+----------------------------------------
+
+插件不实现玩法逻辑。
+
+只负责：
+- 合法性检查
+- 广播事件
+
+具体行为：
+由游戏层实现。
+
+Delegate体系
+========================================
+
+Delegate跟随拥有者。
+
+Inventory级Delegate：
+放在：
+InventoryComponent
+
+推荐事件：
+- OnInventoryChanged
+- OnItemAdded
+- OnItemRemoved
+- OnItemMoved
+- OnItemUpdated
+- OnWeightChanged
+- OnInventoryResized
+- OnQuickSlotChanged
+
+GameplayTag设计
+========================================
+
+采用：
+- C++定义核心Tag
+- 编辑器扩展项目Tag
+
+插件内部核心Tag：
+使用：
+UE_DECLARE_GAMEPLAY_TAG_EXTERN
+
+优点：
+- 编译期安全
+- IDE可跳转
+- 易维护
+
+SaveGame设计
+========================================
+
+真正存储：
+- Items
+- GridSize
+- QuickSlots
+
+不存储：
+- OccupancyMap
+
+原因：
+OccupancyMap是运行时缓存。
+
+联机兼容设计
+========================================
+
+当前：
+不实现联机。
+
+但架构预留：
+- API统一入口
+- Runtime独立
+- Struct数据
+- Delegate驱动
+- OccupancyMap本地重建
+
+未来可扩展：
+- FastArraySerializer
+- RPC
+- Authority验证
+
+当前阶段总结
+========================================
+
+目前已经完成：
+- 插件定位
+- 模块划分
+- 数据层设计
+- RuntimeData设计
+- Grid系统设计
+- OccupancyMap设计
+- API设计
+- Delegate体系
+- UI架构设计
+- GameplayTag方案
+- SaveGame方向
+- 联机兼容方向
+
+下一阶段建议：
+- UI详细架构
+- DragDropOperation设计
+- Tooltip系统
+- Widget刷新机制
+- 快捷栏UI
+- SaveGame正式实现
+- DataTable加载器
+- RuntimeData序列化
+- 网络同步预留

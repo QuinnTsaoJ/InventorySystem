@@ -1,0 +1,21 @@
+﻿# UE Generated
+Binaries/
+Intermediate/
+DerivedDataCache/
+Saved/
+
+# VS
+.vs/
+.vscode/
+
+# Rider
+.idea/
+
+# Build cache
+*.VC.db
+*.VC.opendb
+
+# User files
+*.suo
+*.user
+*.userprefs
