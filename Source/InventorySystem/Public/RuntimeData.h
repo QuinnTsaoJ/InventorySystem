@@ -20,6 +20,8 @@ struct INVENTORYSYSTEM_API FFoodRuntimeData : public FItemRuntimeData
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, DisplayName = "温度")
 	float Temperature = 25.f;
+	
+	
 };
 
 
