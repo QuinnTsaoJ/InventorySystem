@@ -5,17 +5,16 @@
 	"FriendlyName": "InventorySystem",
 	"Description": "",
 	"Category": "Other",
-	"CreatedBy": "",
+	"CreatedBy": "一氧化二氢",
 	"CreatedByURL": "",
 	"DocsURL": "",
 	"MarketplaceURL": "",
 	"SupportURL": "",
 	"CanContainContent": true,
-	"IsBetaVersion": false,
+	"IsBetaVersion": true,
 	"IsExperimentalVersion": false,
 	"Installed": false,
-	"Plugins":
-	[
+	"Plugins": [
 		{
 			"Name": "EnhancedInput",
 			"Enabled": true
