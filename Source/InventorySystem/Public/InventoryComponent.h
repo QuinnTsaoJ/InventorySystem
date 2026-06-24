@@ -30,6 +30,10 @@ struct INVENTORYSYSTEM_API FInventoryOperationResult
 
 	UPROPERTY(BlueprintReadOnly)
 	TArray<FGuid> AffectedItems;
+
+	/** 本次操作实际处理的物品数量（如实际加入/移除的数量） */
+	UPROPERTY(BlueprintReadOnly)
+	int32 Amount = 0;
 };
 
 
@@ -175,9 +179,19 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	FInventoryOperationResult RemoveAll();
 
-	/** 移除指定数量的某类物品（从任意堆叠中扣除），Count <= 0 表示全部移除 */
+	/** 移除指定数量的某类物品（从任意堆叠中扣除），Count <= 0 表示全部移除，Result.Amount 为实际移除数量 */
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	FInventoryOperationResult RemoveItemsByID(FName ItemRowID, int32 Count = 0);
+
+	/**
+	 * 按物品数据表行名加入物品，内部自动分组堆叠。
+	 * 空间或重量不足时只加入可容纳的部分，Result.Amount 为实际加入数量。
+	 * @param ItemRowID 物品数据表行名
+	 * @param Quantity  期望加入的数量（默认 1）
+	 * @return 操作结果，Amount 字段表示实际加入数量；全放不下时 ResultCode = NoSpace
+	 */
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	FInventoryOperationResult AddItemByID(FName ItemRowID, int32 Quantity = 1);
 
 	//---------------------------- 存档 API ---------------------------
 

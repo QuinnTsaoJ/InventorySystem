@@ -824,7 +824,10 @@ FInventoryOperationResult UInventoryComponent::RemoveItemsByID(FName ItemRowID, 
 {
 	FInventoryOperationResult Result;
 
-	const int32 RemainingAfter = (Count <= 0) ? 0 : FMath::Max(0, GetItemCount(ItemRowID) - Count);
+	// 记录移除前的总数，用于计算实际移除数量
+	const int32 BeforeCount = GetItemCount(ItemRowID);
+
+	const int32 RemainingAfter = (Count <= 0) ? 0 : FMath::Max(0, BeforeCount - Count);
 
 	if (Count <= 0 || RemainingAfter <= 0)
 	{
@@ -875,13 +878,120 @@ FInventoryOperationResult UInventoryComponent::RemoveItemsByID(FName ItemRowID, 
 	OnWeightChanged.Broadcast();
 	OnInventoryChanged.Broadcast();
 
+	// 实际移除数量 = 移除前总数 - 移除后剩余总数
+	Result.Amount = BeforeCount - GetItemCount(ItemRowID);
 	Result.bSuccess = true;
 	return Result;
 }
 
-//=============================================================================
-// 快捷栏 API
-//=============================================================================
+FInventoryOperationResult UInventoryComponent::AddItemByID(FName ItemRowID, int32 Quantity)
+{
+	FInventoryOperationResult Result;
+
+	if (Quantity <= 0)
+	{
+		Result.Message = FText::FromString(TEXT("数量必须大于 0"));
+		Result.ResultCode = EInventoryResult::InvalidItem;
+		return Result;
+	}
+
+	const FInventoryItemDefinition* Def = GetItemDefinition(ItemRowID);
+	if (!Def)
+	{
+		Result.ResultCode = EInventoryResult::InvalidItem;
+		Result.Message = FText::FromString(TEXT("无效物品ID"));
+		return Result;
+	}
+
+	// 重量预算：根据剩余承重计算最多能加入的数量
+	int32 Desired = Quantity;
+	if (Def->Weight > 0.f)
+	{
+		const int32 MaxByWeight = FMath::FloorToInt((MaxWeight - CurrentWeight) / Def->Weight);
+		Desired = FMath::Min(Desired, FMath::Max(0, MaxByWeight));
+	}
+
+	if (Desired <= 0)
+	{
+		Result.ResultCode = EInventoryResult::Overweight;
+		Result.Message = FText::FromString(TEXT("超重，无法添加"));
+		return Result;
+	}
+
+	int32 Remaining = Desired;
+
+	// 阶段一：可堆叠且无实例数据 → 先填满已有同类型堆叠
+	if (Def->bStackable && !Def->bUseInstanceData)
+	{
+		for (FInventoryItemInstance& ExistingItem : Items)
+		{
+			if (Remaining <= 0)
+			{
+				break;
+			}
+			if (ExistingItem.ItemID != ItemRowID || ExistingItem.Quantity >= Def->MaxStackSize)
+			{
+				continue;
+			}
+
+			const int32 Room = Def->MaxStackSize - ExistingItem.Quantity;
+			const int32 ToAdd = FMath::Min(Room, Remaining);
+			ExistingItem.Quantity += ToAdd;
+			Remaining -= ToAdd;
+
+			Result.AffectedItems.Add(ExistingItem.InstanceID);
+			OnItemUpdated.Broadcast(ExistingItem.InstanceID);
+		}
+	}
+
+	// 阶段二：剩余部分占新格
+	while (Remaining > 0)
+	{
+		FInventoryItemInstance NewItem;
+		NewItem.ItemID = ItemRowID;
+		NewItem.InstanceID = FGuid::NewGuid();
+		NewItem.bRotated = false;
+		// 可堆叠物品按 MaxStackSize 分组；不可堆叠物品每次 1 个
+		NewItem.Quantity = (Def->bStackable && !Def->bUseInstanceData)
+			? FMath::Min(Remaining, Def->MaxStackSize)
+			: 1;
+
+		FIntPoint NewPosition;
+		if (!FindAvailablePosition(NewItem, NewPosition))
+		{
+			// 空间不足，停止占新格
+			break;
+		}
+
+		NewItem.Position = NewPosition;
+		Items.Add(NewItem);
+
+		Remaining -= NewItem.Quantity;
+		Result.AffectedItems.Add(NewItem.InstanceID);
+		OnItemAdded.Broadcast(NewItem);
+	}
+
+	// 实际加入数量
+	Result.Amount = Desired - Remaining;
+
+	RebuildOccupancyMap();
+	RecalculateWeight();
+	OnWeightChanged.Broadcast();
+	OnInventoryChanged.Broadcast();
+
+	if (Result.Amount > 0)
+	{
+		Result.bSuccess = true;
+	}
+	else
+	{
+		// 一个都没放进去
+		Result.ResultCode = EInventoryResult::NoSpace;
+		Result.Message = FText::FromString(TEXT("空间不足"));
+	}
+
+	return Result;
+}
 
 bool UInventoryComponent::SetQuickSlot(int32 SlotIndex, const FGuid& ItemID)
 {

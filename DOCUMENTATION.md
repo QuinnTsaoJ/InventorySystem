@@ -103,6 +103,7 @@ DataTable (FInventoryItemDefinition)
 | ResultCode | EInventoryResult | 错误码枚举 |
 | Message | FText | 错误描述文本 |
 | AffectedItems | TArray\<FGuid\> | 受影响的物品 InstanceID 列表 |
+| Amount | int32 | 本次操作实际处理的物品数量（如实际加入/移除的数量） |
 
 ### EInventoryResult（错误码）
 
@@ -166,6 +167,7 @@ DataTable (FInventoryItemDefinition)
 | 方法 | 返回值 | 说明 |
 |------|--------|------|
 | `AddItem(Item)` | FInventoryOperationResult | 添加物品（自动堆叠或占格） |
+| `AddItemByID(ItemRowID, Quantity)` | FInventoryOperationResult | 按行名加入物品，自动分组堆叠，空间/重量不足只加入可容纳部分，Amount 为实际加入数量 |
 | `RemoveItem(InstanceID)` | FInventoryOperationResult | 移除单个物品 |
 | `DropItem(InstanceID)` | FInventoryOperationResult | 丢弃物品（移除 + 触发 OnItemDropped） |
 | `MoveItem(InstanceID, Pos, bRotated)` | FInventoryOperationResult | 移动物品到新位置 |
@@ -176,7 +178,7 @@ DataTable (FInventoryItemDefinition)
 | `AutoArrange()` | FInventoryOperationResult | 自动整理（大物品优先） |
 | `ResizeInventory(NewSize)` | FInventoryOperationResult | 调整背包大小 |
 | `RemoveAll()` | FInventoryOperationResult | 清空所有物品 |
-| `RemoveItemsByID(ItemRowID, Count)` | FInventoryOperationResult | 移除指定数量的某类物品 |
+| `RemoveItemsByID(ItemRowID, Count)` | FInventoryOperationResult | 移除指定数量的某类物品，Count <= 0 表示全部移除，Amount 为实际移除数量 |
 
 ### 快捷栏
 
