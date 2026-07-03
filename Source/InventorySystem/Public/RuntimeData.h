@@ -15,10 +15,10 @@ struct INVENTORYSYSTEM_API FFoodRuntimeData : public FItemRuntimeData
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, DisplayName = "新鲜度")
+	UPROPERTY(SaveGame,EditAnywhere, BlueprintReadWrite, DisplayName = "新鲜度")
 	float Freshness = 100.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, DisplayName = "温度")
+	UPROPERTY(SaveGame,EditAnywhere, BlueprintReadWrite, DisplayName = "温度")
 	float Temperature = 25.f;
 	
 	
@@ -30,9 +30,9 @@ struct INVENTORYSYSTEM_API FLiquidRuntimeData : public FItemRuntimeData
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, DisplayName = "液体体积")
+	UPROPERTY(SaveGame,EditAnywhere, BlueprintReadWrite, DisplayName = "液体体积")
 	float CurrentVolume = 1.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, DisplayName = "温度")
+	UPROPERTY(SaveGame,EditAnywhere, BlueprintReadWrite, DisplayName = "温度")
 	float Temperature = 25.f;
 };

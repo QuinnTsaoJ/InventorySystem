@@ -10,6 +10,6 @@ struct INVENTORYSYSTEM_API FQuickSlot
 
 public:
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(SaveGame,EditAnywhere, BlueprintReadWrite)
 	FGuid ItemInstanceID;
 };

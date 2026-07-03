@@ -57,7 +57,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	bool IsInventoryOpen() const { return InventoryWidget->IsInViewport(); }
 
-	/** 当前玩家背包组件 */
+	/** 注意可能为空，禁止UI以外功能使用因为该值只有在打开背包后才会赋值，当前玩家背包组件 */
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	UInventoryComponent* GetPlayerInventory() const { return PlayerInventory.Get(); }
 

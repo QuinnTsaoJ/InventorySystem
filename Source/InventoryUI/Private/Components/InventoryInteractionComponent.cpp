@@ -67,6 +67,7 @@ void UInventoryInteractionComponent::BeginPlay()
 		}
 	}
 
+	
 	SetupInputBindings();
 }
 
