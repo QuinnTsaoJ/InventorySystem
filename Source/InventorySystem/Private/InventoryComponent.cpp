@@ -902,7 +902,7 @@ FInventoryOperationResult UInventoryComponent::AddItemByID(FName ItemRowID, int3
 		Result.Message = FText::FromString(TEXT("无效物品ID"));
 		return Result;
 	}
-
+	
 	// 重量预算：根据剩余承重计算最多能加入的数量
 	int32 Desired = Quantity;
 	if (Def->Weight > 0.f)
@@ -955,6 +955,12 @@ FInventoryOperationResult UInventoryComponent::AddItemByID(FName ItemRowID, int3
 		NewItem.Quantity = (Def->bStackable && !Def->bUseInstanceData)
 			? FMath::Min(Remaining, Def->MaxStackSize)
 			: 1;
+
+		// 依据定义中的 RuntimeDataType 初始化实例运行时数据，每个实例持有独立副本
+		if (Def->RuntimeDataType.IsValid())
+		{
+			NewItem.RuntimeData.InitializeAs(Def->RuntimeDataType.GetScriptStruct(), Def->RuntimeDataType.GetMemory());
+		}
 
 		FIntPoint NewPosition;
 		if (!FindAvailablePosition(NewItem, NewPosition))
