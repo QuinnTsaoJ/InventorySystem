@@ -102,6 +102,11 @@ public:
 
 	const FInventoryItemDefinition* GetItemDefinition(FName ItemID) const;
 	FInventoryItemInstance* FindItem(const FGuid& InstanceID);
+	const FInventoryItemInstance* FindItem(const FGuid& InstanceID) const;
+
+	/** 按 InstanceID 查找物品，命中则拷贝到 OutItem 并返回 true；供蓝图使用 */
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	bool GetItemByID(const FGuid& InstanceID, FInventoryItemInstance& OutItem) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	const TArray<FInventoryItemInstance>& GetItems() const;

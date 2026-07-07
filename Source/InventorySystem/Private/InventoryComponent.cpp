@@ -68,6 +68,28 @@ FInventoryItemInstance* UInventoryComponent::FindItem(const FGuid& InstanceID)
 	return nullptr;
 }
 
+const FInventoryItemInstance* UInventoryComponent::FindItem(const FGuid& InstanceID) const
+{
+	for (const FInventoryItemInstance& Item : Items)
+	{
+		if (Item.InstanceID == InstanceID)
+		{
+			return &Item;
+		}
+	}
+	return nullptr;
+}
+
+bool UInventoryComponent::GetItemByID(const FGuid& InstanceID, FInventoryItemInstance& OutItem) const
+{
+	if (const FInventoryItemInstance* Item = FindItem(InstanceID))
+	{
+		OutItem = *Item;
+		return true;
+	}
+	return false;
+}
+
 const TArray<FInventoryItemInstance>& UInventoryComponent::GetItems() const
 {
 	return Items;
@@ -207,7 +229,7 @@ FInventoryOperationResult UInventoryComponent::AddItem(const FInventoryItemInsta
 		Result.Message = FText::FromString(TEXT("无效物品ID"));
 		return Result;
 	}
-
+	
 	if (!CanCarryWeight(Def->Weight * InItem.Quantity))
 	{
 		Result.ResultCode = EInventoryResult::Overweight;
@@ -604,7 +626,8 @@ FInventoryOperationResult UInventoryComponent::SplitStack(const FGuid& InstanceI
 	}
 
 	const FInventoryItemDefinition* Def = GetItemDefinition(Item->ItemID);
-	if (!Def || !Def->bStackable)
+	// 带实例数据的物品每个实例独立持有 RuntimeData，拆分会丢失运行时数据，与 AddItem/AddItemByID 的契约一致地拒绝
+	if (!Def || !Def->bStackable || Def->bUseInstanceData)
 	{
 		Result.Message = FText::FromString(TEXT("该物品不可堆叠，无法拆分"));
 		Result.ResultCode = EInventoryResult::NotStackable;
@@ -1129,8 +1152,7 @@ TArray<FGameplayTag> UInventoryComponent::GetAvailableActions(const FGuid& Insta
 {
 	TArray<FGameplayTag> Result;
 
-	// const FindItem 不可用，通过 const_cast 调用已有的非 const 版本
-	FInventoryItemInstance* Item = const_cast<UInventoryComponent*>(this)->FindItem(InstanceID);
+	const FInventoryItemInstance* Item = FindItem(InstanceID);
 	if (!Item)
 	{
 		return Result;
