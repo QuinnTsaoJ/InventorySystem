@@ -10,6 +10,8 @@
 #include "FInventoryItemInstance.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
+#include "Engine/Texture2D.h"
+#include "TimerManager.h"
 
 void UInventoryItemWidget::InitializeItem(const FGuid& InItemID, UInventoryComponent* InInventory)
 {

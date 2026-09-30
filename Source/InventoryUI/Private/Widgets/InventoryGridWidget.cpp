@@ -12,8 +12,9 @@
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/Image.h"
+#include "Engine/Texture2D.h"
 #include "Widgets/GridBackgroundWidget.h"
-#include "Styling/SlateStyle.h"
+#include "Styling/CoreStyle.h"
 
 //=============================================================================
 // 初始化

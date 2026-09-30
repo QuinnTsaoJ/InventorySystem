@@ -19,20 +19,24 @@ struct INVENTORYSYSTEM_API FInventoryOperationResult
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadOnly)
+	/** 本次库存操作是否成功 */
+	UPROPERTY(BlueprintReadOnly, Category = "Inventory|Result", meta=(ToolTip="本次库存操作是否成功"))
 	bool bSuccess = false;
 
-	UPROPERTY(BlueprintReadOnly)
+	/** 本次库存操作的结果代码 */
+	UPROPERTY(BlueprintReadOnly, Category = "Inventory|Result", meta=(ToolTip="本次库存操作的结果代码"))
 	EInventoryResult ResultCode = EInventoryResult::Success;
 
-	UPROPERTY(BlueprintReadOnly)
+	/** 本次库存操作的结果说明 */
+	UPROPERTY(BlueprintReadOnly, Category = "Inventory|Result", meta=(ToolTip="本次库存操作的结果说明"))
 	FText Message;
 
-	UPROPERTY(BlueprintReadOnly)
+	/** 本次库存操作涉及的物品实例标识 */
+	UPROPERTY(BlueprintReadOnly, Category = "Inventory|Result", meta=(ToolTip="本次库存操作涉及的物品实例标识"))
 	TArray<FGuid> AffectedItems;
 
 	/** 本次操作实际处理的物品数量（如实际加入/移除的数量） */
-	UPROPERTY(BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly, Category = "Inventory|Result", meta=(ToolTip="本次操作实际处理的物品数量（如实际加入/移除的数量）"))
 	int32 Amount = 0;
 };
 
@@ -104,6 +108,10 @@ public:
 	FInventoryItemInstance* FindItem(const FGuid& InstanceID);
 	const FInventoryItemInstance* FindItem(const FGuid& InstanceID) const;
 
+	/** 获取当前使用的物品定义数据表 */
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	UDataTable* GetItemDefinitionTable() const;
+
 	/** 按 InstanceID 查找物品，命中则拷贝到 OutItem 并返回 true；供蓝图使用 */
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
 	bool GetItemByID(const FGuid& InstanceID, FInventoryItemInstance& OutItem) const;
@@ -113,7 +121,7 @@ public:
 
 	/** 查找背包中所有指定 ItemRowID 的物品，返回 InstanceID 数组 */
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	TArray<FGuid> FindItemsByID(FName ItemRowID) const;
+	TArray<FGuid> FindItemsByRowID(FName ItemRowID) const;
 
 	/** 背包中某类物品的总数量（跨所有堆叠） */
 	UFUNCTION(BlueprintCallable, Category = "Inventory")

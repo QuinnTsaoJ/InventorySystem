@@ -34,7 +34,8 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Inventory|ContextMenu")
 	void OnBuildMenu(const TArray<FGameplayTag>& Actions, const FGuid& ActionItemID);
 
-	UPROPERTY(BlueprintReadOnly,meta = (BindWidget))
+	/** 用于放置右键菜单项的布局容器 */
+	UPROPERTY(BlueprintReadOnly, Category = "Inventory|ContextMenu", meta = (BindWidget, ToolTip="用于放置右键菜单项的布局容器"))
 	TObjectPtr<UVerticalBox> EntryContainer;
 	
 	

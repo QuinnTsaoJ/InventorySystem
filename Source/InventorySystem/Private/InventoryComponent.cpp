@@ -5,17 +5,9 @@
 #include "InventoryTags.h"
 #include "GameplayTagContainer.h"
 #include "Engine/DataTable.h"
-#include "UObject/ConstructorHelpers.h"
 
 UInventoryComponent::UInventoryComponent()
 {
-	static ConstructorHelpers::FObjectFinder<UDataTable> ItemTableFinder(
-		TEXT("/Script/Engine.DataTable'/InventorySystem/Data/ItemDataTable.ItemDataTable'"));
-	if (ItemTableFinder.Succeeded())
-	{
-		ItemDefinitionTable = ItemTableFinder.Object;
-	}
-
 	PrimaryComponentTick.bCanEverTick = false;
 }
 
@@ -54,6 +46,11 @@ const FInventoryItemDefinition* UInventoryComponent::GetItemDefinition(FName Ite
 		DefinitionCache.Add(ItemID, Def);
 	}
 	return Def;
+}
+
+UDataTable* UInventoryComponent::GetItemDefinitionTable() const
+{
+	return ItemDefinitionTable;
 }
 
 FInventoryItemInstance* UInventoryComponent::FindItem(const FGuid& InstanceID)
@@ -110,7 +107,7 @@ bool UInventoryComponent::CanCarryWeight(float AdditionalWeight) const
 	return (CurrentWeight + AdditionalWeight) <= MaxWeight;
 }
 
-TArray<FGuid> UInventoryComponent::FindItemsByID(FName ItemRowID) const
+TArray<FGuid> UInventoryComponent::FindItemsByRowID(FName ItemRowID) const
 {
 	TArray<FGuid> Result;
 	for (const FInventoryItemInstance& Item : Items)
@@ -982,7 +979,8 @@ FInventoryOperationResult UInventoryComponent::AddItemByID(FName ItemRowID, int3
 		// 依据定义中的 RuntimeDataType 初始化实例运行时数据，每个实例持有独立副本
 		if (Def->RuntimeDataType.IsValid())
 		{
-			NewItem.RuntimeData.InitializeAs(Def->RuntimeDataType.GetScriptStruct(), Def->RuntimeDataType.GetMemory());
+			// 拷贝定义的类型路径与模板字节到实例，运行时各自独立解析
+			NewItem.RuntimeData = Def->RuntimeDataType;
 		}
 
 		FIntPoint NewPosition;
@@ -1074,8 +1072,7 @@ bool UInventoryComponent::UseQuickSlot(int32 SlotIndex)
 	{
 		return false;
 	}
-
-	UseItem(*Item);
+	ExecuteAction(TAG_Inventory_Action_使用, ItemID);
 	return true;
 }
 

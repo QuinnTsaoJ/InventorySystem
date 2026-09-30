@@ -10,6 +10,7 @@ struct INVENTORYSYSTEM_API FQuickSlot
 
 public:
 
-	UPROPERTY(SaveGame,EditAnywhere, BlueprintReadWrite)
+	/** 快捷栏绑定的物品实例标识 */
+	UPROPERTY(SaveGame, EditAnywhere, BlueprintReadWrite, Category = "Inventory|QuickSlot", meta=(ToolTip="快捷栏绑定的物品实例标识"))
 	FGuid ItemInstanceID;
 };

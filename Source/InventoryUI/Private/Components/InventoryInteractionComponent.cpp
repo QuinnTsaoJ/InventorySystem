@@ -9,9 +9,11 @@
 #include "InventoryComponent.h"
 #include "Interfaces/InventoryProviderInterface.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/Pawn.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/InputComponent.h"
 #include "Engine/World.h"
+#include "UObject/ConstructorHelpers.h"
 
 UInventoryInteractionComponent::UInventoryInteractionComponent()
 {

@@ -14,13 +14,16 @@ struct INVENTORYSYSTEM_API FInventoryContainer
 
 public:
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, DisplayName = "容器大小")
+	/** 容器的网格尺寸 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, DisplayName = "容器大小", Category = "Inventory|Container", meta=(ToolTip="容器的网格尺寸"))
 	FIntPoint GridSize = FIntPoint::ZeroValue;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, DisplayName = "最大承重")
+	/** 容器允许的最大总重量 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, DisplayName = "最大承重", Category = "Inventory|Container", meta=(ToolTip="容器允许的最大总重量"))
 	float MaxWeight = 100.f;
 
-	UPROPERTY(BlueprintReadWrite)
+	/** 每个网格位置的占用状态 */
+	UPROPERTY(BlueprintReadWrite, Category = "Inventory|Container", meta=(ToolTip="每个网格位置的占用状态"))
 	TArray<int32> OccupancyMap;
 
 	UPROPERTY()

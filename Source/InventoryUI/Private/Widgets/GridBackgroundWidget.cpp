@@ -2,7 +2,7 @@
 // InventorySystem Plugin
 
 #include "Widgets/GridBackgroundWidget.h"
-#include "Styling/SlateStyle.h"
+#include "Styling/CoreStyle.h"
 
 void UGridBackgroundWidget::SetGridParameters(FIntPoint InGridSize, float InCellSize, float InLineThickness)
 {
